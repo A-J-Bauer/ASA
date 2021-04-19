@@ -16,5 +16,6 @@ In order to do that simply use a 10uF capacitor and connect it to the reset and 
 
 Note: As long as the capacitor is in place you cannot upload new sketches.
 
-
+The serial.js is a modified version of Google's Serial Polyfill from here https://github.com/google/web-serial-polyfill.
+The modified version also works with Arduino clones on Android phones (Apple not tested).
 
