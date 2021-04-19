@@ -3,6 +3,8 @@ Arduino Serial App, a phone ready PWA for connecting to Arduinos over the USB se
 
 Installable pwa (Chrome only) here: https://a-j-bauer.github.io/asa/
 
+For phones you need an OTG USB cable.
+
 You can change the baud rate to e.g. 19200 by entering:
 
 **:baud 19200**
