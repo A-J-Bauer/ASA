@@ -5,6 +5,12 @@ Installable pwa (Chrome only) here: https://a-j-bauer.github.io/asa/
 
 For phones you need an OTG USB cable.
 
+Tested Arduino devices:
+
+* Leonardo ETH (genuine)
+* MEGA 2560 (clone)
+* NANO (clone)
+
 You can change the baud rate to e.g. 19200 by entering:
 
 **:baud 19200**
