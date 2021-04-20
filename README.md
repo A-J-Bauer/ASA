@@ -8,7 +8,8 @@ For phones you need an OTG USB cable.
 Tested Arduino devices:
 
 * Leonardo ETH (genuine)
-* MEGA 2560 (clone)
+* MEGA 2560 R3 (genuine)
+* MEGA 2560 R3 (clone)
 * NANO (clone)
 
 You can change the baud rate to e.g. 19200 by entering:
