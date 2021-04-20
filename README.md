@@ -1,22 +1,29 @@
 # asa
 Arduino Serial App, a phone ready PWA for connecting to Arduinos over the USB serial interface, providing a simple serial input and output terminal.
 
-Installable pwa (Chrome only) here: https://a-j-bauer.github.io/asa/
+Installable PWA (Chrome only) here: https://a-j-bauer.github.io/asa/
 
 For phones you need an OTG USB cable.
 
-Tested Arduino devices:
+**Tested Arduino devices:**
 
 * Leonardo ETH (genuine)
 * MEGA 2560 R3 (genuine)
 * MEGA 2560 R3 (clone)
 * NANO (clone)
 
-You can change the baud rate to e.g. 19200 by entering:
 
-**:baud 19200**
+**Baud Rate**
+You can change the baud rate to e.g. 19200 by entering ':baud 19200'.
 
-**Prevent reset:** When you connect to the Arduino over serial the Arduino will auto reset and your sketch will restart.
+The baud rate will be stored in local storage and therefore will persist until changed again.
+
+![baud](https://github.com/A-J-Bauer/asa/blob/main/readme_img/baud.png)
+
+
+**Prevent reset:** 
+
+When you connect to the Arduino over serial the Arduino will auto reset and your sketch will restart.
 Usually this is a good thing (for uploading sketches) but sometimes you want to get some serial output from a potentially long running sketch without restarting.
 In order to do that simply use a 10uF capacitor and connect it to the reset and gnd pin.
 
