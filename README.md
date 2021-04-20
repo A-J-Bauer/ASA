@@ -13,10 +13,11 @@ For phones you need an OTG USB cable.
 * NANO (clone)
 
 
-**Baud Rate**
+**Baud Rate:**
+
 You can change the baud rate to e.g. 19200 by entering ':baud 19200'.
 
-The baud rate will be stored in local storage and therefore will persist until changed again.
+The baud rate will be stored in local storage and will persist until changed again.
 
 ![baud](https://github.com/A-J-Bauer/asa/blob/main/readme_img/baudrate.png)
 
