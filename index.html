@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -9,20 +9,44 @@
     <link rel="apple-touch-icon" href="/img/icon-192.png">
     <link rel="icon" href="/asa/favicon.ico">
     <link rel="manifest" href="/asa/manifest.json" />
-
+   
     <title>ASA - Arduino Serial App</title>
 
     <style>
+        @font-face {
+            font-family: 'Roboto Mono';
+            font-style: normal;
+            font-weight: 400;
+            src: url(RobotoMono-Regular.ttf) format('truetype');
+        }
+
         html, body {
             height: 100%;
-            margin: 0;
-            font-size: large;
+            margin: 0;            
             overscroll-behavior-y: contain;
         }
 
+        html, body, input {
+            font-family: 'Roboto Mono';
+            font-size: medium;
+        }
+        
         p {
             margin: 2px 4px 2px 4px;
         }
+
+        .btn {
+            background-color: #0ca1a6;
+            border: none;
+            padding: 0;
+            margin: 0;
+            width: 42px;
+            height: 42px;
+            cursor: pointer;
+        }
+            .btn:hover {
+                background-color: #20c3b4;
+            }
 
         #c {
             width: 100%;
@@ -33,10 +57,9 @@
         #outputDiv {
             position: absolute;
             top: 0;
-            bottom: 48px;
+            bottom: 50px;
             left: 0;
-            right: 0;
-            font-family: 'Courier New';
+            right: 0;           
             overflow-y: scroll;
             background-color: white;
             color: #111111;
@@ -47,75 +70,75 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 48px;
+            height: 50px;
             background-color: #0ca1a6;
         }
 
-        #btnConnect {
+        #menuBtn {
+            position: absolute;            
+            right: 0;
+            top: 0;            
+        }
+         
+        #connectBtn {
             position: absolute;
             left: 5px;
             top: 4px;
-            height: 40px;
-            width: 40px;
         }
 
-            #btnConnect:hover {
-                background-color: gray;
-            }
-
-        #inputElem {
-            min-width: 100%;
-            max-width: 100%;
-            margin: 0;
-            padding: 6px;
-            font-family: 'Courier New';
-            font-size: large;
+        #enterBtn {
+            position: absolute;
+            right: 5px;
+            top: 4px;
         }
+
 
         #inputDiv {
             position: absolute;
-            top: 6px;
-            left: 50px;
-            right: 66px;
-            height: 40px;
+            top: 8px;
+            left: 52px;
+            right: 52px;
+            bottom: 8px;
         }
 
-        #btnEnter {
+        #inputElem {
             position: absolute;
-            top: 4px;
-            right: 5px;
-            height: 40px;
-            width: 40px;
+            background-color: white;
+            border: none;
+            outline: none;
+            font-size: medium;
+            width: 100%;
+            height: 100%;
+            padding: 6px 10px 10px 10px;
+            margin: 0;
+            box-sizing: border-box;
         }
 
-            #btnEnter:hover {
-                background-color: gray;
-            }
     </style>
 </head>
-<body>    
+<body>
+    
     <div id="c">
-        <div id="outputDiv">      
+        <div id="outputDiv">           
             <p id="version"></p>
         </div>
         <div id="panelDiv">
-            <div id="btnConnect"><img src="img/connect.svg" alt="connect/disconnect" /></div>
-            <div id="inputDiv"><input id="inputElem" type="text" /></div>
-            <div id="btnEnter"><img src="img/enter.svg" alt="enter" /></div>
-            
-        </div>
-
-
+            <button id="connectBtn" class="btn"><img src="img/white_36dp_play.svg" width="38" height="38" alt="connect" /></button>
+            <div id="inputDiv"><input id="inputElem" type="text" spellcheck="false" /></div>            
+            <button id="enterBtn" class="btn"><img src="img/white_36dp_check.svg" width="38" height="38" alt="connect" /></button>
+        </div>        
     </div>
-    
    
     <script type="text/javascript" src="serial.js"></script>
-    <script type="text/javascript">        
+    <script type="text/javascript">
 
-        'use strict';       
+        'use strict';
+
+
+       
 
         class SerialTerminal {
-            constructor(connectButton, inputElem, outputDiv, enterBtn, numEntries) {                                
+            constructor(connectButton, inputElem, outputDiv, enterBtn, numEntries) {
                 this.connectButton = connectButton;
                 this.inputElem = inputElem;
                 this.outputDiv = outputDiv;
@@ -125,20 +148,20 @@
                 const br = window.localStorage.getItem('baud');
                 this._serialOptions = { baudRate: (br ? br : 9600), dataBits: 8, stopBits: 1, parity: 'none' };
                 this._port = null;
-                this._interface = null;
-                this._inendpoint = null;
-                this._outendpoint = null;
-                this._doInput = false;
+                this._reader = null;
+                this._textdecoder = new TextDecoder();
+                this._writer = null;
+                this._textencoder = new TextEncoder();
 
                 this.appendOutput(':baud ' + this._serialOptions.baudRate);
-                
+
                 this.connectButton.addEventListener('click', e => {
                     try {
                         this._connect();
-                        
+
                     } catch (e) {
                         output.appendChild(e);
-                    }                    
+                    }
                 });
 
                 this.inputElem.addEventListener('keyup', e => {
@@ -151,7 +174,7 @@
                 this.enterBtn.addEventListener('click', e => {
                     if (this._port === null || !this._port.open) {
                         const inpSplit = this.inputElem.value.split(' ');
-                        if (inpSplit.length === 2) {                            
+                        if (inpSplit.length === 2) {
                             if (inpSplit[0].toLowerCase() === ':baud' && Number.isInteger(parseInt(inpSplit[1]))) {
                                 window.localStorage.setItem('baud', inpSplit[1]);
                                 this._serialOptions.baudRate = inpSplit[1];
@@ -159,10 +182,16 @@
                                 return;
                             }
                         }
+                        else if (inpSplit.length === 1) {
+                            if (inpSplit[0].toLowerCase() === ':save') {
+                                this._save();
+                                return;
+                            }
+                        }
 
                         this.appendOutput('not connected - nothing sent');
                         return;
-                    }               
+                    }
 
                     try {
                         this._write(this.inputElem.value);
@@ -178,7 +207,7 @@
             appendOutput(value, fromSerial) {
                 const valueType = Object.prototype.toString.call(value);
 
-                let text = '';                
+                let text = '';
                 if (valueType === '[object String]') {
                     text = value;
                 }
@@ -197,16 +226,18 @@
                 }
 
                 if (scroll) {
-                    newPara.scrollIntoView();                    
+                    newPara.scrollIntoView();
                 }
-                
+
             }
-           
+
             async _connect() {
-                if (this._port !== null && this._port.open) {                    
-                    this._doInput = false;
+                if (this._port !== null && this._port.open) {
+                    if (this._reader !== null) {
+                        this._reader.cancel();
+                    }
                     return;
-                }               
+                }
 
                 this._port = null;
 
@@ -214,71 +245,71 @@
                     if ("serial" in navigator) {
                         this.appendOutput('using navigator.serial');
                         this._port = await navigator.serial.requestPort();
-                    } else if ("usb" in navigator) {
-                        this.appendOutput('using navigator.usb');
-                        try {
-                            this._port = await serial.requestPort();
-                        } catch (e) {
-                            this.appendOutput(e);
-                            if (this._port.opened) {
-                                await this._port.close();
-                                this.appendOutput('port closed');
+                    } else
+                        if ("usb" in navigator) {
+                            this.appendOutput('using navigator.usb');
+                            try {
+                                this._port = await serial.requestPort();
+                            } catch (e) {
+                                this.appendOutput(e);
+
+                                if (this._port.opened) {
+                                    await this._port.close();
+                                    this.appendOutput('port closed');
+                                }
+                                this._port = null;
+                                throw new Error(e);
                             }
-                            this._port = null;
-                            throw new Error(e);
+                        } else {
+                            this.appendOutput('neither serial nor usb is supported');
                         }
-                    } else {
-                        this.appendOutput('neither serial nor usb is supported');
-                    }
                 } catch (e) {
                     this.appendOutput(e);
                     this._port = null;
                 }
-                        
+
 
                 if (this._port != null) {
                     try {
                         await this._port.open(this._serialOptions);
 
-                        this.connectButton.children[0].src = 'img/disconnect.svg';
+                        this.connectButton.children[0].src = 'img/white_36dp_stop.svg';
                         this.appendOutput('port opened');
-                        this._doInput = true;
 
                         await this._read();
                         await this._port.close();
 
                         this._port = null;
 
-                        this.connectButton.children[0].src = 'img/connect.svg';
+                        this.connectButton.children[0].src = 'img/white_36dp_play.svg';
                         this.appendOutput('port closed');
                     } catch (e) {
                         this.appendOutput(e);
                     }
-                }                
+                }
             }
 
 
 
             async _read() {
                 try {
-                    const reader = this._port.readable.getReader();
-                    const textdecoder = new TextDecoder();
-
                     let text = '';
 
+                    this._reader = this._port.readable.getReader();
+
                     while (true) {
-                        const { value, done } = await reader.read();
-                        if (done || !this._doInput) {
-                            reader.releaseLock();
+                        const { value, done } = await this._reader.read();
+                        if (done) {
+                            this._reader.releaseLock();
                             break;
                         }
 
                         const valueType = Object.prototype.toString.call(value);
 
                         if (valueType === '[object Uint8Array]') {
-                            text += textdecoder.decode(value);
+                            text += this._textdecoder.decode(value);
                         } else if (valueType === '[object DataView]') {
-                            text += textdecoder.decode(new Uint8Array(value.buffer));
+                            text += this._textdecoder.decode(new Uint8Array(value.buffer));
                         }
 
                         const lines = text.split('\r\n');
@@ -293,61 +324,68 @@
             }
 
             async _write(msg) {
-                const writer = this._port.writable.getWriter();
+                this._writer = this._port.writable.getWriter();
 
-                try {                    
-                    const textencoder = new TextEncoder();
-                    const encoded = textencoder.encode(msg);
-                    await writer.write(encoded);      
+                try {
+
+                    const encoded = this._textencoder.encode(msg);
+                    await this._writer.write(encoded);
                     this.appendOutput('"' + msg + '" sent');
                 } catch (e) {
                     this.appendOutput(e);
                 }
 
-                writer.releaseLock();
+                this._writer.releaseLock();
             }
-           
+
+            async _save() {
+                const options = {
+                    types: [
+                        {
+                            description: 'Text Files',
+                            accept: {
+                                'text/plain': ['.txt'],
+                            },
+                        },
+                    ],
+                };
+
+                try {
+                    const fileHandle = await window.showSaveFilePicker(options);
+                    try {
+                        const writable = await fileHandle.createWritable();
+                        const contents = this.outputDiv.querySelectorAll('p');
+                        let contentString = '';
+                        for (let i = 0; i < contents.length; i++) {
+                            contentString += contents[i].innerHTML + '\r\n';
+                        }
+                        await writable.write(contentString);
+                        await writable.close();
+                    } catch (e) {
+                        this.appendOutput(e);
+                    }
+                } catch (ed) {
+                }
+                                
+            }
+
 
 
         }
 
 
-       
 
-        
-        
-        let serialTerminal = new SerialTerminal(            
-            document.getElementById('btnConnect'),            
+        let serialTerminal = new SerialTerminal(
+            document.getElementById('connectBtn'),
             document.getElementById('inputElem'),
             document.getElementById('outputDiv'),
-            document.getElementById('btnEnter'),
+            document.getElementById('enterBtn'),
             128
         )
 
-        
-
-
-       
-       
-
-        
 
 
     </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -357,19 +395,19 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.addEventListener('message', event => {
                     if (event.data.msg && event.data.msg === 'version') {
-                        document.getElementById('version').innerHTML = 'v' + event.data.version;
-                    }                    
+                        document.getElementById('version').innerHTML = 'arduino serial app v' + event.data.version;
+                    }
                 });
 
                 navigator.serviceWorker.register('/asa/sw.js', { scope: '/asa/' })
                     .then(reg => {
-                        console.log('registered', reg);                        
+                        console.log('registered', reg);
                     }).catch(err => {
                         console.log('registration failed', err);
-                    });           
+                    });
 
                 navigator.serviceWorker.ready.then(reg => {
-                    reg.active.postMessage("version");                    
+                    reg.active.postMessage("version");
                 });
             });
         }
