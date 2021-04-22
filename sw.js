@@ -1,4 +1,4 @@
-﻿const version = '4.45';
+const version = '4.46';
 
 const cacheName = 'cache-' + version;
 
@@ -6,16 +6,18 @@ const resourcesToPreserve = [
     '/asa/',
     '/asa/index.html',
     '/asa/serial.js',
-    '/asa/favicon.ico',
-    '/asa/img/connect.svg',
-    '/asa/img/disconnect.svg',
+    '/asa/favicon.ico',    
     '/asa/img/enter.svg',
     '/asa/img/icon-72.png',
     '/asa/img/icon-96.png',
     '/asa/img/icon-144.png',
     '/asa/img/icon-192.png',
     '/asa/img/icon-256.png',
-    '/asa/img/icon-512.png'
+    '/asa/img/icon-512.png',
+    '/asa/img/white_36dp_check.svg',
+    '/asa/img/white_36dp_play.svg',
+    '/asa/img/white_36dp_stop.svg',
+    '/asa/RobotoMono-Regular.ttf'
 ];
 
 self.addEventListener('install', event => {    
