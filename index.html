@@ -245,24 +245,12 @@
                     if ("serial" in navigator) {
                         this.appendOutput('using navigator.serial');
                         this._port = await navigator.serial.requestPort();
-                    } else
-                        if ("usb" in navigator) {
-                            this.appendOutput('using navigator.usb');
-                            try {
-                                this._port = await serial.requestPort();
-                            } catch (e) {
-                                this.appendOutput(e);
-
-                                if (this._port.opened) {
-                                    await this._port.close();
-                                    this.appendOutput('port closed');
-                                }
-                                this._port = null;
-                                throw new Error(e);
-                            }
-                        } else {
-                            this.appendOutput('neither serial nor usb is supported');
-                        }
+                    } else if ("usb" in navigator) {
+                        this.appendOutput('using navigator.usb');
+                        this._port = await serial.requestPort();
+                    } else {
+                        this.appendOutput('neither serial nor usb is supported');
+                    }
                 } catch (e) {
                     this.appendOutput(e);
                     this._port = null;
