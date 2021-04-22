@@ -19,9 +19,9 @@ You can change the baud rate to e.g. 19200 by entering ':baud 19200'.
 
 The baud rate will be stored in local storage and will persist until changed again.
 
-**Save output to file:**
+~~**Save output to file:**~~
 
-You can save the output to a file by entering ':save'.
+~~You can save the output to a file by entering ':save')~~ as soon as the File Api is working on mobile
 
 
 **Prevent reset:** 
