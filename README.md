@@ -21,7 +21,7 @@ The baud rate will be stored in local storage and will persist until changed aga
 
 ~~**Save output to file:**~~
 
-~~You can save the output to a file by entering ':save')~~ as soon as the File Api is working on mobile
+~~You can save the output to a file by entering ':save')~~ (as soon as the File Api is working on mobile)
 
 
 **Prevent reset:** 
