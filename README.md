@@ -19,7 +19,9 @@ You can change the baud rate to e.g. 19200 by entering ':baud 19200'.
 
 The baud rate will be stored in local storage and will persist until changed again.
 
-![baud](https://github.com/A-J-Bauer/asa/blob/main/readme_img/baudrate.png)
+**Save output to file:**
+
+You can save the output to a file by entering ':save'.
 
 
 **Prevent reset:** 
