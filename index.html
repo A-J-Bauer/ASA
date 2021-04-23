@@ -14,11 +14,13 @@
     <title>ASA - Arduino Serial App</title>
 
     <style>
+
         @font-face {
             font-family: 'Roboto Mono';
             font-style: normal;
             font-weight: 400;
-            src: url(RobotoMono-Regular.ttf) format('truetype');
+            src: local('Roboto Mono'), url(RobotoMono-Regular.ttf) format('truetype');
+            font-display: swap;
         }
 
         html, body {
@@ -28,22 +30,14 @@
         }
 
         html, body, p, input {
-            font-family: 'Roboto Mono', 'Courier New', monospace;
-            text-size-adjust: 100%;
-            -webkit-text-size-adjust: 100%;
+            font-family: 'Roboto Mono', 'Courier New', monospace;           
         }        
 
         @media only screen and (min-width: 601px) {
             p {
                 font-size: 14px;
             }            
-        }
-        
-        @media only screen and (max-width: 600px) {
-            p {                
-                font-size: medium;
-            }
-        }
+        }               
 
         p {
             margin: 2px 4px 2px 4px;           
@@ -63,6 +57,10 @@
             .btn:hover {
                 background-color: #20c3b4;
             }
+        }
+
+        .systout {
+            color :rgb(12, 161, 166);
         }
 
         #c {
@@ -228,7 +226,7 @@
 
                 const newPara = document.createElement('p');
                 newPara.innerHTML = text;
-                newPara.style = fromSerial ? '' : 'color:#0ca1a6';
+                newPara.className = fromSerial ? '' : 'systout';
 
                 const scroll = this.outputDiv.scrollHeight - this.outputDiv.scrollTop < this.outputDiv.clientHeight + 20;
                 this.outputDiv.appendChild(newPara);
