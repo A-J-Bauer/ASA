@@ -1,4 +1,4 @@
-const version = '4.55';
+const version = '4.57';
 
 const cacheName = 'cache-' + version;
 
