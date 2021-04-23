@@ -34,14 +34,10 @@
         }        
 
         @media only screen and (min-width: 601px) {
-            p {
+            td {
                 font-size: 14px;
             }            
-        }               
-
-        p {
-            margin: 2px 4px 2px 4px;           
-        }
+        }                     
 
         .btn {
             background-color: #0ca1a6;
@@ -59,10 +55,6 @@
             }
         }
 
-        .systout {
-            color :rgb(12, 161, 166);
-        }
-
         #c {
             width: 100%;
             height: 100%;
@@ -78,7 +70,7 @@
             overflow-y: scroll;
             background-color: white;
             color: #111111;
-            max-height: 5000em;
+            max-height: 1000000px;
         }
 
         #panelDiv {
@@ -128,13 +120,26 @@
             margin: 0;
             box-sizing: border-box;
         }
+
+        #outputDiv table, td {
+            border: none;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .systout {
+            color: rgb(12, 161, 166);
+        }
+        
     </style>
 </head>
 <body>
     
     <div id="c">
-        <div id="outputDiv">           
-            <p id="version"></p>
+        <div id="outputDiv">                                  
+            <table>
+                <tr><td id="version"></td></tr>
+            </table>
         </div>
         <div id="panelDiv">
             <button id="connectBtn" class="btn"><img src="img/white_36dp_play.svg" width="38" height="38" alt="connect" /></button>
@@ -164,6 +169,7 @@
                 this._textdecoder = new TextDecoder();
                 this._writer = null;
                 this._textencoder = new TextEncoder();
+                this._outputTbl = this.outputDiv.children[0];
 
                 this.appendOutput(':baud ' + this._serialOptions.baudRate);
 
@@ -225,18 +231,20 @@
                     text = value.toString();
                 }
 
-                const newPara = document.createElement('p');
-                newPara.innerHTML = text;
-                newPara.className = fromSerial ? '' : 'systout';
-
                 const scroll = this.outputDiv.scrollHeight - this.outputDiv.scrollTop < this.outputDiv.clientHeight + 20;
-                this.outputDiv.appendChild(newPara);
-                while (this.outputDiv.children.length > this.numEntries) {
-                    this.outputDiv.removeChild(this.outputDiv.firstElementChild);
+
+                let newRow = this._outputTbl.insertRow(-1);
+                let newCell = newRow.insertCell(0);
+                newCell.className = fromSerial ? '' : 'systout';
+                let newText = document.createTextNode(text);
+                newCell.appendChild(newText);
+
+                while (this._outputTbl.rows.length > this.numEntries) {                   
+                    this._outputTbl.deleteRow(0);
                 }
 
                 if (scroll) {
-                    newPara.scrollIntoView();
+                    newCell.scrollIntoView();
                 }
 
             }
@@ -252,17 +260,19 @@
                 this._port = null;
 
                 try {
-                    if ("serial" in navigator) {
-                        this.appendOutput('using navigator.serial');
+                    if ("serial" in navigator) {                        
                         this._port = await navigator.serial.requestPort();
-                    } else if ("usb" in navigator) {
-                        this.appendOutput('using navigator.usb');
+                    } else if ("usb" in navigator) {                        
                         this._port = await serial.requestPort();
                     } else {
                         this.appendOutput('neither serial nor usb is supported');
                     }
                 } catch (e) {
-                    this.appendOutput(e);
+                    if (e.name === 'NotFoundError') {
+                        this.appendOutput('nothing selected - not connecting');
+                    } else {
+                        this.appendOutput(e);
+                    }                    
                     this._port = null;
                 }
 
@@ -391,7 +401,7 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.addEventListener('message', event => {
                     if (event.data.msg && event.data.msg === 'version') {
-                        document.getElementById('version').innerHTML = 'arduino serial app v' + event.data.version;
+                        document.getElementById('version').innerHTML = 'v' + event.data.version;
                     }
                 });
 
