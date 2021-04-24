@@ -127,6 +127,10 @@
             width: 100%;
         }
 
+        #outputDiv td {
+            padding: 0 5px 0 5px;            
+        }
+
         .systout {
             color: rgb(12, 161, 166);
         }
@@ -182,42 +186,27 @@
                     }
                 });
 
-                this.inputElem.addEventListener('keyup', e => {
+                this.inputElem.addEventListener('keyup', e => {                    
                     if (e.keyCode === 13) {
-                        e.preventDefault();
-                        this.enterBtn.click();
+                        e.preventDefault();                        
+                        this._processInput();                        
                     }
-                });
+                }, false);
 
-                this.enterBtn.addEventListener('click', e => {
-                    if (this._port === null || !this._port.open) {
-                        const inpSplit = this.inputElem.value.split(' ');
-                        if (inpSplit.length === 2) {
-                            if (inpSplit[0].toLowerCase() === ':baud' && Number.isInteger(parseInt(inpSplit[1]))) {
-                                window.localStorage.setItem('baud', inpSplit[1]);
-                                this._serialOptions.baudRate = inpSplit[1];
-                                this.appendOutput('baud rate set to ' + this._serialOptions.baudRate);
-                                return;
-                            }
-                        }
-                        else if (inpSplit.length === 1) {
-                            if (inpSplit[0].toLowerCase() === ':save') {
-                                this._save();
-                                return;
-                            }
-                        }
+                this.enterBtn.addEventListener('click', e => {                   
+                    this._processInput();                    
+                }, false);
 
-                        this.appendOutput('not connected - nothing sent');
-                        return;
-                    }
+                this.enterBtn.addEventListener('touchstart', e => {                    
+                    return true;
+                }, true);
 
-                    try {
-                        this._write(this.inputElem.value);
-                    } catch (e) {
-                        this.appendOutput(e);
-                    }
-                })
-
+                this.enterBtn.addEventListener('touchend', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this._processInput();
+                    return false;
+                }, true);
             }
 
             appendOutput(value, fromSerial) {
@@ -248,6 +237,39 @@
                 }
 
             }
+
+            async _processInput() {
+                if (this._port === null || !this._port.open) {
+                    const inpSplit = this.inputElem.value.split(' ');
+                    if (inpSplit.length === 2) {
+                        if (inpSplit[0].toLowerCase() === ':baud' && Number.isInteger(parseInt(inpSplit[1]))) {
+                            window.localStorage.setItem('baud', inpSplit[1]);
+                            this._serialOptions.baudRate = inpSplit[1];
+                            this.appendOutput('baud rate set to ' + this._serialOptions.baudRate);
+                            return;
+                        }
+                    }
+                    else if (inpSplit.length === 1) {
+                        if (inpSplit[0].toLowerCase() === ':save') {
+                            await this._save();
+                            return;
+                        }
+                    }
+
+                    if (this.inputElem.value !== '') {
+                        this.appendOutput('not connected - nothing sent');                        
+                    }
+
+                    return;
+                }
+
+                try {
+                    await this._write(this.inputElem.value);
+                } catch (e) {
+                    this.appendOutput(e);
+                }
+            }
+            
 
             async _connect() {
                 if (this._port !== null && this._port.open) {
