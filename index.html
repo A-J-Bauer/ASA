@@ -5,7 +5,7 @@
     <meta charset="utf-8" />    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="Description" content="Main page of the pwa3 app.">
+    <meta name="Description" content="ASA - Arduino Serial App">
     <meta name="theme-color" content="#0ca1a6" />
     <link rel="apple-touch-icon" href="/img/icon-192.png">
     <link rel="icon" href="/asa/favicon.ico">
@@ -29,7 +29,7 @@
             overscroll-behavior-y: contain;
         }
 
-        html, body, p, input {
+        html, body, td, input {
             font-family: 'Roboto Mono', 'Courier New', monospace;           
         }        
 
@@ -80,12 +80,6 @@
             right: 0;
             height: 50px;
             background-color: #0ca1a6;
-        }
-
-        #menuBtn {
-            position: absolute;
-            right: 0;
-            top: 0;
         }
 
         #connectBtn {
@@ -306,14 +300,19 @@
                         this.connectButton.children[0].src = 'img/white_36dp_stop.svg';
                         this.appendOutput('port opened');
 
-                        await this._read();
-                        await this._port.close();
-
+                        try {
+                            await this._read();
+                        } catch {}
+                        
+                        try {
+                            await this._port.close();
+                        } catch {}
+                        
                         this._port = null;
 
                         this.connectButton.children[0].src = 'img/white_36dp_play.svg';
                         this.appendOutput('port closed');
-                    } catch (e) {
+                    } catch (e) {                        
                         this.appendOutput(e);
                     }
                 }
@@ -348,7 +347,7 @@
                             text = text.substr(lines[i].length + 2);
                         }
                     }
-                } catch (e) {
+                } catch (e) {                               
                     this.appendOutput(e);
                 }
             }
@@ -361,7 +360,7 @@
                     const encoded = this._textencoder.encode(msg);
                     await this._writer.write(encoded);
                     this.appendOutput('"' + msg + '" sent');
-                } catch (e) {
+                } catch (e) {                    
                     this.appendOutput(e);
                 }
 
@@ -391,7 +390,7 @@
                         }
                         await writable.write(contentString);
                         await writable.close();
-                    } catch (e) {
+                    } catch (e) {                        
                         this.appendOutput(e);
                     }
                 } catch (ed) {
@@ -409,7 +408,7 @@
             document.getElementById('outputDiv'),
             document.getElementById('enterBtn'),
             128
-        )
+        );
 
 
 
