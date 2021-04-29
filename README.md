@@ -6,7 +6,7 @@ Installable PWA (Chrome only) here: https://a-j-bauer.github.io/asa/
 For phones you need an OTG USB cable.
 
 **Tested Arduino devices:**
-
+* Uno (genuine)
 * Leonardo ETH (genuine)
 * MEGA 2560 R3 (genuine)
 * MEGA 2560 R3 (clone)
