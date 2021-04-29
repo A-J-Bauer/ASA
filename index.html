@@ -31,7 +31,11 @@
 
         html, body, td, input {
             font-family: 'Roboto Mono', 'Courier New', monospace;           
-        }        
+        }
+
+        td {
+            font-size: 16px;
+        } 
 
         @media only screen and (min-width: 601px) {
             td {
@@ -118,12 +122,15 @@
         #outputDiv table, td {
             border: none;
             border-collapse: collapse;
+        }
+
+        #outputDiv table {
             width: 100%;
         }
 
         #outputDiv td {
             padding: 0 5px 0 5px;            
-        }
+        }        
 
         .systout {
             color: rgb(12, 161, 166);
@@ -136,7 +143,7 @@
     <div id="c">
         <div id="outputDiv">                                  
             <table>
-                <tr><td id="version"></td></tr>
+                <tr></td><td id="version"></td></tr>
             </table>
         </div>
         <div id="panelDiv">
@@ -153,7 +160,7 @@
 
 
         class SerialTerminal {
-            constructor(connectButton, inputElem, outputDiv, enterBtn, numEntries) {
+            constructor(connectButton, inputElem, outputDiv, enterBtn, numEntries, bufferSize) {
                 this.connectButton = connectButton;
                 this.inputElem = inputElem;
                 this.outputDiv = outputDiv;
@@ -168,6 +175,16 @@
                 this._writer = null;
                 this._textencoder = new TextEncoder();
                 this._outputTbl = this.outputDiv.children[0];
+
+                this._bufferSize = bufferSize === undefined ? 0 : bufferSize;
+                this._bufferPos = -1;
+                this._buffer = [];
+                this._lastInputElemValue = '';
+
+                this._commands = [
+                    { cmd: 'baud', numargs: 1, func: this._setBaud, onlyDisconnected: true },
+                    { cmd: 'save', numargs: 0, func: this._save, onlyDisconnected: true },
+                    { cmd: 'clear', numargs: 0, func: this._clearOutput, onlyDisconnected: false }];
 
                 this.appendOutput(':baud ' + this._serialOptions.baudRate);
 
@@ -187,6 +204,35 @@
                     }
                 }, false);
 
+                this.inputElem.addEventListener('keydown', e => {
+                    switch (e.keyCode) {
+                        case 38:
+                            if (this._bufferSize > 0 && this._bufferPos > -1) {
+                                this._bufferPos = Math.max(0, this._bufferPos - 1);
+                                this.inputElem.value = this._buffer[this._bufferPos];
+                            }
+                            break;
+                        case 40:
+                            if (this._bufferSize > 0) {
+                                this._bufferPos = Math.min(this._buffer.length, this._bufferPos + 1);
+                                if (this._bufferPos === this._buffer.length) {
+                                    this.inputElem.value = '';
+                                } else {
+                                    this.inputElem.value = this._buffer[this._bufferPos];
+                                }
+                            }
+                            break;
+                        case 13:
+                            if (this._bufferSize > 0 && this._lastInputElemValue !== this.inputElem.value) {
+                                this._buffer.push(this.inputElem.value);
+                                this._buffer.splice(0, Math.max(0, this._buffer.length - this._bufferSize));
+                                this._lastInputElemValue = this.inputElem.value;
+                            }
+                            this._bufferPos = this._buffer.length;
+                            break;
+                    }                    
+                }, false);
+
                 this.enterBtn.addEventListener('click', e => {                   
                     this._processInput();                    
                 }, false);
@@ -201,8 +247,9 @@
                     this._processInput();
                     return false;
                 }, true);
+               
             }
-
+            
             appendOutput(value, fromSerial) {
                 const valueType = Object.prototype.toString.call(value);
 
@@ -215,53 +262,54 @@
                 }
 
                 const scroll = this.outputDiv.scrollHeight - this.outputDiv.scrollTop < this.outputDiv.clientHeight + 20;
+                const newRow = this._outputTbl.insertRow(-1);                
 
-                let newRow = this._outputTbl.insertRow(-1);
-                let newCell = newRow.insertCell(0);
-                newCell.className = fromSerial ? '' : 'systout';
-                let newText = document.createTextNode(text);
-                newCell.appendChild(newText);
+                const newCell0 = newRow.insertCell(0);
+                if (!fromSerial) {
+                    newCell0.className = 'systout';
+                }
+                
+                let newText1 = document.createTextNode(text);
+                newCell0.appendChild(newText1);
 
                 while (this._outputTbl.rows.length > this.numEntries) {                   
                     this._outputTbl.deleteRow(0);
                 }
 
                 if (scroll) {
-                    newCell.scrollIntoView();
+                    newCell0.scrollIntoView();
                 }
 
             }
 
             async _processInput() {
-                if (this._port === null || !this._port.open) {
+                if (this.inputElem.value.startsWith(':')) {
                     const inpSplit = this.inputElem.value.split(' ');
-                    if (inpSplit.length === 2) {
-                        if (inpSplit[0].toLowerCase() === ':baud' && Number.isInteger(parseInt(inpSplit[1]))) {
-                            window.localStorage.setItem('baud', inpSplit[1]);
-                            this._serialOptions.baudRate = inpSplit[1];
-                            this.appendOutput('baud rate set to ' + this._serialOptions.baudRate);
-                            return;
+                    if (inpSplit.length > 0) {
+                        inpSplit[0] = inpSplit[0].substring(1);
+                        const command = this._commands.find(x => x.cmd === inpSplit[0] && x.numargs === inpSplit.length - 1);
+                        if (command) {
+                            inpSplit.shift();
+                            if (command.onlyDisconnected && this._port !== null && this._port.open) {
+                                this.appendOutput('connected - cannot process this command');                                
+                            } else {
+                                await command.func.call(this, inpSplit);
+                                this.inputElem.value = '';
+                            }                           
                         }
-                    }
-                    else if (inpSplit.length === 1) {
-                        if (inpSplit[0].toLowerCase() === ':save') {
-                            await this._save();
-                            return;
+                        else {
+                            this.appendOutput('unknown command');
                         }
+                    }                     
+                } else if (this._port !== null && this._port.open) {
+                    try {
+                        await this._write(this.inputElem.value);
+                    } catch (e) {
+                        this.appendOutput(e);
                     }
-
-                    if (this.inputElem.value !== '') {
-                        this.appendOutput('not connected - nothing sent');                        
-                    }
-
-                    return;
-                }
-
-                try {
-                    await this._write(this.inputElem.value);
-                } catch (e) {
-                    this.appendOutput(e);
-                }
+                } else {
+                    this.appendOutput('not connected - nothing sent');
+                }                
             }
             
 
@@ -318,8 +366,6 @@
                 }
             }
 
-
-
             async _read() {
                 try {
                     let text = '';
@@ -367,7 +413,17 @@
                 this._writer.releaseLock();
             }
 
-            async _save() {
+            async _setBaud(args) {
+                if (Number.isInteger(parseInt(args[0]))) {
+                    window.localStorage.setItem('baud', args[0]);
+                    this._serialOptions.baudRate = parseInt(args[0]);
+                    this.appendOutput('baud rate set to ' + this._serialOptions.baudRate);
+                    return;
+
+                }
+            }
+
+            async _save() {                
                 const options = {
                     types: [
                         {
@@ -383,7 +439,7 @@
                     const fileHandle = await window.showSaveFilePicker(options);
                     try {
                         const writable = await fileHandle.createWritable();
-                        const contents = this.outputDiv.querySelectorAll('p');
+                        const contents = this.outputDiv.querySelectorAll('td');
                         let contentString = '';
                         for (let i = 0; i < contents.length; i++) {
                             contentString += contents[i].innerHTML + '\r\n';
@@ -394,10 +450,15 @@
                         this.appendOutput(e);
                     }
                 } catch (ed) {
-                }
-                                
+                }                                
             }
 
+            async _clearOutput() {
+                while (this._outputTbl.rows.length > 0) {
+                    this._outputTbl.deleteRow(0);
+                }
+            }
+                       
         }
 
 
@@ -407,7 +468,8 @@
             document.getElementById('inputElem'),
             document.getElementById('outputDiv'),
             document.getElementById('enterBtn'),
-            128
+            128,
+            32
         );
 
 
