@@ -2,17 +2,16 @@
 Arduino Serial App, 
 a phone ready PWA for connecting to Arduinos over the USB serial interface, providing a simple serial input and output terminal.
 
+![screenshot](https://github.com/A-J-Bauer/asa/blob/main/readme_img/screenshot.png)
+
+Installable PWA (Chrome only) here: https://a-j-bauer.github.io/asa/
+
 **Tested Arduino devices:**
 * Uno (genuine)
 * Leonardo ETH (genuine)
 * MEGA 2560 R3 (genuine)
 * MEGA 2560 R3 (clone)
 * NANO (clone)
-
-
-![long run nano](https://github.com/A-J-Bauer/asa/blob/main/readme_img/screenshot.png)
-
-Installable PWA (Chrome only) here: https://a-j-bauer.github.io/asa/
 
 For phones you need an OTG USB cable.
 
