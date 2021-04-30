@@ -2,7 +2,7 @@
 Arduino Serial App, 
 a phone ready PWA for connecting to Arduinos over the USB serial interface, providing a simple serial input and output terminal. Installable PWA (Chrome only) here: https://a-j-bauer.github.io/asa/
 
-![screenshot](https://github.com/A-J-Bauer/asa/blob/main/readme_img/screenshot.png)
+![screenshot](https://github.com/A-J-Bauer/asa/blob/main/docimg/screenshot.png)
 
 **Tested Arduino devices:**
 * Uno (genuine)
