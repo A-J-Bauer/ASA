@@ -31,17 +31,7 @@
 
         html, body, td, input {
             font-family: 'Roboto Mono', 'Courier New', monospace;           
-        }
-
-        td {
-            font-size: 16px;
-        } 
-
-        @media only screen and (min-width: 601px) {
-            td {
-                font-size: 14px;
-            }            
-        }                     
+        }                          
 
         .btn {
             background-color: #0ca1a6;
@@ -128,14 +118,48 @@
             width: 100%;
         }
 
-        #outputDiv td {
-            padding: 0 5px 0 5px;            
-        }        
+            #outputDiv table td {
+                padding: 0 5px 0 5px;
+            }
 
-        .systout {
-            color: rgb(12, 161, 166);
+        #outputDiv .tsShow {
+            display: block;
+            color: darkgray;
+            width: 120px;
+            white-space: nowrap;
         }
-        
+
+        #outputDiv .tsHide {
+            display: none;
+        }
+
+        #outputDiv .outsyst {
+            color: rgb(12, 161, 166);
+            white-space: pre-wrap;
+        }
+
+        #outputDiv .outserial {
+            color: rgb(10, 10, 10);
+        }
+
+        #outputDiv .outcmd {
+            color: rgb(0 121 126);
+        }
+
+        td {
+            font-size: 16px;
+        }
+
+        @media only screen and (min-width: 601px) {
+            td {
+                font-size: 14px;
+            }
+
+            #outputDiv .tsShow {               
+                width: 100px;                
+            }
+        }   
+
     </style>
 </head>
 <body>
@@ -143,7 +167,7 @@
     <div id="c">
         <div id="outputDiv">                                  
             <table>
-                <tr></td><td id="version"></td></tr>
+                <tr><td class="outsyst" id="version"></td><td></td></tr>
             </table>
         </div>
         <div id="panelDiv">
@@ -175,6 +199,8 @@
                 this._writer = null;
                 this._textencoder = new TextEncoder();
                 this._outputTbl = this.outputDiv.children[0];
+                const ts = window.localStorage.getItem('showTimestamps');
+                this._showTimestamps = ts ? (ts === '1') : false;
 
                 this._bufferSize = bufferSize === undefined ? 0 : bufferSize;
                 this._bufferPos = -1;
@@ -182,11 +208,14 @@
                 this._lastInputElemValue = '';
 
                 this._commands = [
-                    { cmd: 'baud', numargs: 1, func: this._setBaud, onlyDisconnected: true },
-                    { cmd: 'save', numargs: 0, func: this._save, onlyDisconnected: true },
-                    { cmd: 'clear', numargs: 0, func: this._clearOutput, onlyDisconnected: false }];
+                    { cmd: 'help', numargs: 0, func: this._help, onlyDisconnected: false, syntax: '.help', help: 'show this list' },
+                    { cmd: 'baud', numargs: 1, func: this._setBaud, onlyDisconnected: true, syntax: '.baud <rate>', help: 'set the baud rate' },
+                    { cmd: 'ts', numargs: 0, func: this._toggleTimestamps, onlyDisconnected: false, syntax: '.ts', help: 'toggle timestamps' },
+                    { cmd: 'save', numargs: 0, func: this._save, onlyDisconnected: true, syntax: '.save', help: 'save output to file' },
+                    { cmd: 'clear', numargs: 0, func: this._clearOutput, onlyDisconnected: false, syntax: '.clear', help: 'clear the output' }];
 
-                this.appendOutput(':baud ' + this._serialOptions.baudRate);
+                this._help();
+                
 
                 this.connectButton.addEventListener('click', e => {
                     try {
@@ -250,7 +279,7 @@
                
             }
             
-            appendOutput(value, fromSerial) {
+            appendOutput(value, outclass) {
                 const valueType = Object.prototype.toString.call(value);
 
                 let text = '';
@@ -265,25 +294,47 @@
                 const newRow = this._outputTbl.insertRow(-1);                
 
                 const newCell0 = newRow.insertCell(0);
-                if (!fromSerial) {
-                    newCell0.className = 'systout';
-                }
+                const newCell1 = newRow.insertCell(1);
                 
-                let newText1 = document.createTextNode(text);
-                newCell0.appendChild(newText1);
+                if (!outclass || outclass === 'outcmd') {
+                    newCell0.className = 'outsyst';       
+                    if (outclass) {
+                        newCell0.classList.add('outcmd');
+                    }
+                    newCell0.colSpan = 2;
+                    newCell0.appendChild(document.createTextNode(text));
+                } else {                    
+                    newCell0.className = this._showTimestamps ? 'tsShow' : 'tsHide';
+                    newCell0.appendChild(document.createTextNode(this._getTimestamp()));
+
+                    newCell1.className = outclass;
+                    newCell1.appendChild(document.createTextNode(text));
+                }
 
                 while (this._outputTbl.rows.length > this.numEntries) {                   
                     this._outputTbl.deleteRow(0);
                 }
 
                 if (scroll) {
-                    newCell0.scrollIntoView();
+                    this.outputDiv.scrollTo({ left: 0, top: this.outputDiv.scrollHeight, behavior: 'auto' });                    
                 }
 
             }
 
+            _getTimestamp() {
+                const now = new Date();
+                const h = now.getHours().toString().padStart(2, '0');
+                const m = now.getMinutes().toString().padStart(2, '0');
+                const s = now.getSeconds().toString().padStart(2, '0');
+                const ms = now.getSeconds().toString().padStart(3, '0');
+                return h + ':' + m + ':' + s + '.' + ms;
+            }
+
+            
+
+
             async _processInput() {
-                if (this.inputElem.value.startsWith(':')) {
+                if (this.inputElem.value.startsWith('.')) {
                     const inpSplit = this.inputElem.value.split(' ');
                     if (inpSplit.length > 0) {
                         inpSplit[0] = inpSplit[0].substring(1);
@@ -389,7 +440,7 @@
 
                         const lines = text.split('\r\n');
                         for (let i = 0; i < lines.length - 1; i++) {
-                            this.appendOutput(lines[i], true);
+                            this.appendOutput(lines[i], 'outserial');
                             text = text.substr(lines[i].length + 2);
                         }
                     }
@@ -413,6 +464,15 @@
                 this._writer.releaseLock();
             }
 
+            async _help(args) {
+                this.appendOutput(' ');
+                this.appendOutput('commands:');
+                for (let i = 0; i < this._commands.length; i++) {
+                    this.appendOutput('  ' + this._commands[i].syntax.padEnd(12) + ' - ' + this._commands[i].help, 'outcmd');
+                }
+                this.appendOutput(' ');
+            }
+
             async _setBaud(args) {
                 if (Number.isInteger(parseInt(args[0]))) {
                     window.localStorage.setItem('baud', args[0]);
@@ -420,6 +480,20 @@
                     this.appendOutput('baud rate set to ' + this._serialOptions.baudRate);
                     return;
 
+                }
+            }
+
+            async _toggleTimestamps(args) {
+                this._showTimestamps = !this._showTimestamps;
+                window.localStorage.setItem('showTimestamps', this._showTimestamps ? '1' : '0');
+
+                for (let i = 0; i < this._outputTbl.rows.length; i++) {
+                    if (!this._outputTbl.rows[i].cells[0].classList.contains('outsyst')) {
+                        if (this._outputTbl.rows[i].cells[0].classList.contains(this._showTimestamps ? 'tsHide' : 'tsShow')) {
+                            this._outputTbl.rows[i].cells[0].classList.remove(this._showTimestamps ? 'tsHide' : 'tsShow');
+                        }
+                        this._outputTbl.rows[i].cells[0].classList.add(this._showTimestamps ? 'tsShow' : 'tsHide');
+                    }
                 }
             }
 
