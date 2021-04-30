@@ -61,11 +61,17 @@
             bottom: 50px;
             left: 0;
             right: 0;
-            overflow-y: scroll;
-            background-color: white;
-            color: #111111;
+            overflow-y: scroll;            
             max-height: 1000000px;
         }
+
+            #outputDiv.lt {
+                background-color: white;
+            }
+
+            #outputDiv.dk {
+                background-color: black;
+            }
 
         #panelDiv {
             position: absolute;
@@ -97,8 +103,7 @@
         }
 
         #inputElem {
-            position: absolute;
-            background-color: white;
+            position: absolute;            
             border: none;
             outline: none;            
             font-size: medium;
@@ -108,6 +113,16 @@
             margin: 0;
             box-sizing: border-box;
         }
+
+            #inputElem.lt {
+                background-color: white;
+                color: rgb(10, 10, 10);
+            }
+
+            #inputElem.dk {
+                background-color: black;
+                color: rgb(220, 220, 220);
+            }
 
         #outputDiv table, td {
             border: none;
@@ -133,18 +148,31 @@
             display: none;
         }
 
-        #outputDiv .outsyst {
-            color: rgb(12, 161, 166);
+        #outputDiv .outsyst, #outputDiv .outcmd {
             white-space: pre-wrap;
         }
 
-        #outputDiv .outserial {
+            #outputDiv .outsyst, .outsyst.lt, #outputDiv .outsyst.dk {
+                color: rgb(12, 161, 166);
+            }
+            
+            #outputDiv .outcmd.lt {
+                color: rgb(0 121 126);
+            }
+
+            #outputDiv .outcmd.dk {
+                color: rgb(0 189 196);
+            }
+
+        #outputDiv .outserial.lt {
             color: rgb(10, 10, 10);
         }
 
-        #outputDiv .outcmd {
-            color: rgb(0 121 126);
+        #outputDiv .outserial.dk {
+            color: rgb(220, 220, 220);
         }
+            
+
 
         td {
             font-size: 16px;
@@ -201,6 +229,11 @@
                 this._outputTbl = this.outputDiv.children[0];
                 const ts = window.localStorage.getItem('showTimestamps');
                 this._showTimestamps = ts ? (ts === '1') : false;
+                const th = window.localStorage.getItem('theme');
+                this._theme = th ? th : 'lt';
+
+                this.outputDiv.classList.add(this._theme);
+                this.inputElem.classList.add(this._theme);                
 
                 this._bufferSize = bufferSize === undefined ? 0 : bufferSize;
                 this._bufferPos = -1;
@@ -208,15 +241,15 @@
                 this._lastInputElemValue = '';
 
                 this._commands = [
-                    { cmd: 'help', numargs: 0, func: this._help, onlyDisconnected: false, syntax: '.help', help: 'show this list' },
+                    { cmd: 'help', numargs: 0, func: this._help, onlyDisconnected: false, syntax: '.help', help: 'show this list' },                    
                     { cmd: 'baud', numargs: 1, func: this._setBaud, onlyDisconnected: true, syntax: '.baud <rate>', help: 'set the baud rate' },
                     { cmd: 'ts', numargs: 0, func: this._toggleTimestamps, onlyDisconnected: false, syntax: '.ts', help: 'toggle timestamps' },
-                    { cmd: 'save', numargs: 0, func: this._save, onlyDisconnected: true, syntax: '.save', help: 'save output to file' },
-                    { cmd: 'clear', numargs: 0, func: this._clearOutput, onlyDisconnected: false, syntax: '.clear', help: 'clear the output' }];
+                    { cmd: 'clear', numargs: 0, func: this._clearOutput, onlyDisconnected: false, syntax: '.clear', help: 'clear the output' },
+                    { cmd: 'save', numargs: 0, func: this._save, onlyDisconnected: true, syntax: '.save', help: 'save output to file' },                    
+                    { cmd: 'theme', numargs: 0, func: this._toggleTheme, onlyDisconnected: false, syntax: '.theme', help: 'toggle light/dark theme' }];
 
                 this._help();
                 
-
                 this.connectButton.addEventListener('click', e => {
                     try {
                         this._connect();
@@ -297,18 +330,17 @@
                 const newCell1 = newRow.insertCell(1);
                 
                 if (!outclass || outclass === 'outcmd') {
-                    newCell0.className = 'outsyst';       
-                    if (outclass) {
-                        newCell0.classList.add('outcmd');
-                    }
+                    newCell0.className = outclass ? outclass : 'outsyst';                           
                     newCell0.colSpan = 2;
                     newCell0.appendChild(document.createTextNode(text));
+                    newCell0.classList.add(this._theme);
                 } else {                    
                     newCell0.className = this._showTimestamps ? 'tsShow' : 'tsHide';
                     newCell0.appendChild(document.createTextNode(this._getTimestamp()));
 
                     newCell1.className = outclass;
                     newCell1.appendChild(document.createTextNode(text));
+                    newCell1.classList.add(this._theme);
                 }
 
                 while (this._outputTbl.rows.length > this.numEntries) {                   
@@ -495,6 +527,35 @@
                         this._outputTbl.rows[i].cells[0].classList.add(this._showTimestamps ? 'tsShow' : 'tsHide');
                     }
                 }
+            }
+
+            async _toggleTheme(args) {
+                
+                if (this.outputDiv.classList.contains(this._theme)) {
+                    this.outputDiv.classList.remove(this._theme);
+                }
+
+                if (this.inputElem.classList.contains(this._theme)) {
+                    this.inputElem.classList.remove(this._theme)
+                }
+
+                const outTds = this.outputDiv.querySelectorAll('td');
+                for (let i = 0; i < outTds.length; i++) {
+                    if (outTds[i].classList.contains(this._theme)) {
+                        outTds[i].classList.remove(this._theme);
+                    }
+                }
+
+                this._theme = this._theme === 'lt' ? 'dk' : 'lt';
+
+                this.outputDiv.classList.add(this._theme);
+                this.inputElem.classList.add(this._theme)
+
+                for (let i = 0; i < outTds.length; i++) {
+                    outTds[i].classList.add(this._theme);
+                }
+
+                window.localStorage.setItem('theme', this._theme);
             }
 
             async _save() {                
