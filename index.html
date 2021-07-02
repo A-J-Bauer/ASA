@@ -240,6 +240,8 @@
                 this._bufferPos = -1;
                 this._buffer = [];
                 this._lastInputElemValue = '';
+                this._lastRow = null;                
+                this._lastRowComplete = true;
 
                 this._commands = [
                     { cmd: 'help', numargs: 0, func: this._help, onlyDisconnected: false, syntax: '.help', help: 'show this list' },                    
@@ -313,7 +315,7 @@
                
             }
             
-            appendOutput(value, outclass) {
+            appendOutput(value, outclass, incomplete) {
                 const valueType = Object.prototype.toString.call(value);
 
                 let text = '';
@@ -322,36 +324,41 @@
                 }
                 else {
                     text = value.toString();
+                }                
+
+                if (this._lastRowComplete) {
+                    const scroll = this.outputDiv.scrollHeight - this.outputDiv.scrollTop < this.outputDiv.clientHeight + 20;
+
+                    this._lastRow = this._outputTbl.insertRow(-1);                    
+                    const newCell0 = this._lastRow.insertCell(0);
+                    const newCell1 = this._lastRow.insertCell(1);
+
+                    if (!outclass || outclass === 'outcmd') {
+                        newCell0.className = outclass ? outclass : 'outsyst';
+                        newCell0.colSpan = 2;
+                        newCell0.appendChild(document.createTextNode(text));
+                        newCell0.classList.add(this._theme);
+                    } else {
+                        newCell0.className = this._showTimestamps ? 'tsShow' : 'tsHide';
+                        newCell0.appendChild(document.createTextNode(this._getTimestamp()));
+                        newCell1.className = outclass;
+                        newCell1.appendChild(document.createTextNode(text));
+                        newCell1.classList.add(this._theme);
+                    }
+
+                    while (this._outputTbl.rows.length > this.numEntries) {
+                        this._outputTbl.deleteRow(0);
+                    }
+
+                    if (scroll) {
+                        this.outputDiv.scrollTo({ left: 0, top: this.outputDiv.scrollHeight, behavior: 'auto' });
+                    }
                 }
-
-                const scroll = this.outputDiv.scrollHeight - this.outputDiv.scrollTop < this.outputDiv.clientHeight + 20;
-                const newRow = this._outputTbl.insertRow(-1);                
-
-                const newCell0 = newRow.insertCell(0);
-                const newCell1 = newRow.insertCell(1);
+                else {
+                    this._lastRow.children[1].innerText += text;
+                }
                 
-                if (!outclass || outclass === 'outcmd') {
-                    newCell0.className = outclass ? outclass : 'outsyst';                           
-                    newCell0.colSpan = 2;
-                    newCell0.appendChild(document.createTextNode(text));
-                    newCell0.classList.add(this._theme);
-                } else {                    
-                    newCell0.className = this._showTimestamps ? 'tsShow' : 'tsHide';
-                    newCell0.appendChild(document.createTextNode(this._getTimestamp()));
-
-                    newCell1.className = outclass;
-                    newCell1.appendChild(document.createTextNode(text));
-                    newCell1.classList.add(this._theme);
-                }
-
-                while (this._outputTbl.rows.length > this.numEntries) {                   
-                    this._outputTbl.deleteRow(0);
-                }
-
-                if (scroll) {
-                    this.outputDiv.scrollTo({ left: 0, top: this.outputDiv.scrollHeight, behavior: 'auto' });                    
-                }
-
+                this._lastRowComplete = incomplete !== true;
             }
 
             _getTimestamp() {
@@ -475,6 +482,10 @@
                         for (let i = 0; i < lines.length - 1; i++) {
                             this.appendOutput(lines[i], 'outserial');
                             text = text.substr(lines[i].length + 2);
+                        }
+                        if (text !== '') {
+                            this.appendOutput(text, 'outserial', true);
+                            text = '';
                         }
                     }
                 } catch (e) {                               
