@@ -326,9 +326,9 @@
                     text = value.toString();
                 }                
 
-                if (this._lastRowComplete || !outclass || outclass === 'outcmd') {
-                    const scroll = this.outputDiv.scrollHeight - this.outputDiv.scrollTop < this.outputDiv.clientHeight + 20;
+                const scroll = this.outputDiv.scrollHeight - this.outputDiv.scrollTop < this.outputDiv.clientHeight + 20;
 
+                if (this._lastRowComplete || !outclass || outclass === 'outcmd') {                    
                     this._lastRow = this._outputTbl.insertRow(-1);                    
                     const newCell0 = this._lastRow.insertCell(0);
                     const newCell1 = this._lastRow.insertCell(1);
@@ -346,18 +346,19 @@
                         newCell1.appendChild(document.createTextNode(text));
                         newCell1.classList.add(this._theme);
                         this._lastRowComplete = incomplete !== true;
-                    }
-
-                    while (this._outputTbl.rows.length > this.numEntries) {
-                        this._outputTbl.deleteRow(0);
-                    }
-
-                    if (scroll) {
-                        this.outputDiv.scrollTo({ left: 0, top: this.outputDiv.scrollHeight, behavior: 'auto' });
-                    }
+                    }                    
                 }
                 else {
                     this._lastRow.children[1].innerText += text;
+                    this._lastRowComplete = incomplete !== true;
+                }
+
+                while (this._outputTbl.rows.length > this.numEntries) {
+                    this._outputTbl.deleteRow(0);
+                }
+
+                if (scroll) {
+                    this.outputDiv.scrollTo({ left: 0, top: this.outputDiv.scrollHeight, behavior: 'auto' });
                 }
                                 
             }
