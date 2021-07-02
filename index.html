@@ -326,7 +326,7 @@
                     text = value.toString();
                 }                
 
-                if (this._lastRowComplete) {
+                if (this._lastRowComplete || !outclass || outclass === 'outcmd') {
                     const scroll = this.outputDiv.scrollHeight - this.outputDiv.scrollTop < this.outputDiv.clientHeight + 20;
 
                     this._lastRow = this._outputTbl.insertRow(-1);                    
@@ -338,12 +338,14 @@
                         newCell0.colSpan = 2;
                         newCell0.appendChild(document.createTextNode(text));
                         newCell0.classList.add(this._theme);
+                        this._lastRowComplete = true;
                     } else {
                         newCell0.className = this._showTimestamps ? 'tsShow' : 'tsHide';
                         newCell0.appendChild(document.createTextNode(this._getTimestamp()));
                         newCell1.className = outclass;
                         newCell1.appendChild(document.createTextNode(text));
                         newCell1.classList.add(this._theme);
+                        this._lastRowComplete = incomplete !== true;
                     }
 
                     while (this._outputTbl.rows.length > this.numEntries) {
@@ -357,8 +359,7 @@
                 else {
                     this._lastRow.children[1].innerText += text;
                 }
-                
-                this._lastRowComplete = incomplete !== true;
+                                
             }
 
             _getTimestamp() {
