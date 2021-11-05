@@ -11,6 +11,11 @@ a phone ready PWA for connecting to Arduinos over the USB serial interface, prov
 * MEGA 2560 R3 (clone)
 * NANO (clone)
 
+**Other devices:**
+* Raspberry Pi Zero 2 W
+
+  RPi setup: Add 'dtoverlay=dwc2' to /boot/config.txt, insert 'modules-load=dwc2,g_serial' into /boot/cmdline.txt after 'rootwait', reboot. Test with 'echo "test" > /dev/ttyGS0'
+
 For phones you need an OTG USB cable.
 
 **Source Note:**
